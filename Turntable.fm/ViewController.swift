@@ -102,8 +102,8 @@ class ViewController: UIViewController, SHSessionDelegate {
             guard channelCount >= 1 else { return }
 
             // Accelerate is so neat
-            var rms: Float = 0
-            vDSP_rmsqv(floatData[0], 1, &rms, UInt(buffer.frameLength))
+            let floatDataPointer = UnsafeBufferPointer(start: floatData[0], count: Int(buffer.frameLength))
+            let rms = vDSP.rootMeanSquare(floatDataPointer)
 
             let power = 20 * log10(rms)
             let level = { () -> Float in
