@@ -4,7 +4,7 @@ A simple app that lets you stream your vinyl records over AirPlay using an iPhon
 
 It also has the neat feature of automatically matching the song played with Shazam and updating Now Playing accordingly.
 
-## Why'd you call it Turntable.fm?
+### Why'd you call it Turntable.fm?
 
 It was mostly a personal joke since I originally had my records streaming throughout my house using Icecast + DarkIce, which is effectively spinning up my own radiostation, but that didn't work as well so I made this app and called it Turntable.fm.
 
