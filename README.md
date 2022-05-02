@@ -1,4 +1,4 @@
-![Turntable.fm]
+# Turntable.fm
 
 A simple app that lets you stream your vinyl records over AirPlay using an iPhone or iPad.
 
