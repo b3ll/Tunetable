@@ -6,7 +6,7 @@ It also has the neat feature of automatically matching the song played with Shaz
 
 ### Why'd you call it Turntable.fm?
 
-It was mostly a personal joke since I originally had my records streaming throughout my house using Icecast + DarkIce, which is effectively spinning up my own radiostation, but that didn't work as well so I made this app and called it Turntable.fm.
+It was mostly a personal joke since I originally had my records streaming throughout my house using Icecast + DarkIce, which is effectively spinning up my own radio station, but that didn't work as well as I'd like (delay issues) so I made this app instead and called it Turntable.fm.
 
 The name probably won't stick, so I'm open to other ideas, RecordPlay / VinylPlay / AirLP, etc. sounded not so great 🙃
 
