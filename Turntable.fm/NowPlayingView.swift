@@ -59,8 +59,10 @@ struct NowPlayingView: View {
                 .resizable()
                 .aspectRatio(1.0, contentMode: .fill)
                 .scaleEffect(6.9)
-                .blur(radius: 60.0)
+                .blur(radius: 80.0)
                 .opacity(nowPlayingInfo.currentItem?.artworkURL != nil ? 1.0 : 0.0)
+                .overlay(Color.black.opacity(0.1).edgesIgnoringSafeArea(.all))
+                .edgesIgnoringSafeArea(.all)
         )
         .animation(.spring(response: 0.3, dampingFraction: 1.0, blendDuration: 0.0), value: nowPlayingInfo.currentItem)
     }
