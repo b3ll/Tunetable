@@ -113,9 +113,11 @@ class ViewController: UIViewController, SHSessionDelegate {
             }()
 
             if level < 0.6 {
-                // silence, do nothing
-                DispatchQueue.main.async {
-                    self?.updateCurrentItem(with: nil)
+                if self?.nowPlayingInfo.currentItem != nil {
+                    // silence, do nothing
+                    DispatchQueue.main.async {
+                        self?.updateCurrentItem(with: nil)
+                    }
                 }
             } else {
                 // now we have samples, what's playing?
