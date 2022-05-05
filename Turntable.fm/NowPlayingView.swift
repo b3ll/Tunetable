@@ -22,6 +22,7 @@ struct NowPlayingItem: Equatable {
 class NowPlayingInfo: ObservableObject {
 
     @Published var currentItem: NowPlayingItem?
+    @Published var silenceDetected: Bool = false
 
 }
 
@@ -40,7 +41,7 @@ struct NowPlayingView: View {
                 }
                 .frame(width: 300, height: 300, alignment: .center)
 
-                if nowPlayingInfo.currentItem == nil {
+                if nowPlayingInfo.currentItem == nil && !nowPlayingInfo.silenceDetected {
                     ActivityIndicator(isAnimating: true) { activityIndicator in
                         activityIndicator.style = .large
                         activityIndicator.color = .white

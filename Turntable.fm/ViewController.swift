@@ -148,16 +148,28 @@ class ViewController: UIViewController, SHSessionDelegate {
                 return max(0.0, min((abs(minDb) - abs(power)) / abs(minDb), 1.0))
             }()
 
-            if level < 0.4 {
+            if level < 0.6 {
                 if self?.nowPlayingInfo.currentItem != nil {
                     // silence, do nothing
                     DispatchQueue.main.async {
                         self?.updateCurrentItem(with: nil)
                     }
                 }
+
+                if self?.nowPlayingInfo.silenceDetected == false {
+                    DispatchQueue.main.async {
+                        self?.nowPlayingInfo.silenceDetected = true
+                    }
+                }
             } else {
                 // now we have samples, what's playing?
                 self?.addAudio(buffer: buffer, audioTime: audioTime)
+
+                if self?.nowPlayingInfo.silenceDetected == true {
+                    DispatchQueue.main.async {
+                        self?.nowPlayingInfo.silenceDetected = false
+                    }
+                }
             }
         }
 
