@@ -68,12 +68,15 @@ class ViewController: UIViewController, SHSessionDelegate {
                                                selector: #selector(audioRouteChanged(notification:)),
                                                name: AVAudioSession.routeChangeNotification,
                                                object: nil)
+
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        restartMatchingAndStreaming()
+        fixupAVAudioSessionWithAirPlay { [weak self] in
+            self?.restartMatchingAndStreaming()
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -82,11 +85,38 @@ class ViewController: UIViewController, SHSessionDelegate {
         hostedVC.view.frame = view.bounds
     }
 
+    private func fixupAVAudioSessionWithAirPlay(_ completion: @escaping () -> Void) {
+        /**
+         Apparently if this app is ever quit when it's connected to AirPlay, subsequent launches will instantly crash.
+         This is due to the AVAudioSession being configured with `.playAndRecord`, but when connected to AirPlay the inputs are removed (wat).
+         Forcing the category to `.playback` and then switching to `.playAndRecord` after a short duration fixes this crash.
+
+         I guess this app itself only works because it starts out having a category of `.playback` when setting up the AVAudioEngine.
+
+         ¯\_(ツ)_/¯
+         */
+        let audioSession = AVAudioSession.sharedInstance()
+
+        try? audioSession.setCategory(.playback, mode: .default, policy: .default, options: .allowAirPlay)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            try? audioSession.setCategory(.playAndRecord, mode: .measurement, policy: .default, options: .allowAirPlay)
+            completion()
+        }
+    }
+
     func configureAudioEngine() {
         self.analysisNode = AVAudioMixerNode()
         self.outputMixerNode = AVAudioMixerNode()
 
         let inputFormat = audioEngine.inputNode.inputFormat(forBus: 0)
+
+        if inputFormat.channelCount < 1 {
+            showInvalidInputAlert()
+            return
+        } else if presentedViewController is UIAlertController {
+            dismiss(animated: true)
+        }
 
         let analysisOutputFormat = AVAudioFormat(standardFormatWithSampleRate: inputFormat.sampleRate, channels: 1)
         let outputFormat = AVAudioFormat(standardFormatWithSampleRate: inputFormat.sampleRate, channels: 2)
@@ -173,7 +203,7 @@ class ViewController: UIViewController, SHSessionDelegate {
         guard !audioEngine.isRunning else { return }
         let audioSession = AVAudioSession.sharedInstance()
 
-        try audioSession.setCategory(.playAndRecord, mode: .measurement, policy: .default)
+        try audioSession.setCategory(.playAndRecord, mode: .measurement, policy: .default, options: .allowAirPlay)
         audioSession.requestRecordPermission { [weak self] success in
             guard success, let self = self else { return }
             do {
@@ -193,12 +223,12 @@ class ViewController: UIViewController, SHSessionDelegate {
     private func resetAudioEngine() {
         analysisNode?.removeTap(onBus: 0)
 
-        if let analysisNode = analysisNode {
+        if let analysisNode = analysisNode, analysisNode.engine != nil {
             audioEngine.disconnectNodeInput(analysisNode)
             audioEngine.detach(analysisNode)
         }
 
-        if let outputMixerNode = outputMixerNode {
+        if let outputMixerNode = outputMixerNode, outputMixerNode.engine != nil {
             audioEngine.disconnectNodeOutput(outputMixerNode)
             audioEngine.disconnectNodeInput(outputMixerNode)
             audioEngine.detach(outputMixerNode)
@@ -228,6 +258,14 @@ class ViewController: UIViewController, SHSessionDelegate {
             default:
                 break
         }
+    }
+
+    private func showInvalidInputAlert() {
+        let alert = UIAlertController(title: "Invalid Input", message: "The input from the turntable is invalid (there appears to be no input). Please try detaching and reattaching your audio interface, or disconnecting from any AirPlay destinations and try again.", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { [weak self] _ in
+            self?.restartMatchingAndStreaming()
+        }))
+        present(alert, animated: true)
     }
 
     // MARK: - SHSessionDelegate
