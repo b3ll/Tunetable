@@ -33,11 +33,20 @@ struct NowPlayingView: View {
         VStack {
             Spacer()
 
-            AlbumArtWrap(cornerRadius: 4.0, disableWrap: false, disableShadow: false) {
-                AlbumArtView(url: nowPlayingInfo.currentItem?.artworkURL)
-                    .frame(width: 300, height: 300, alignment: .center)
+            ZStack {
+                AlbumArtWrap(cornerRadius: 4.0, disableWrap: false, disableShadow: false) {
+                    AlbumArtView(url: nowPlayingInfo.currentItem?.artworkURL)
+                        .frame(width: 300, height: 300, alignment: .center)
+                }
+                .frame(width: 300, height: 300, alignment: .center)
+
+                if nowPlayingInfo.currentItem == nil {
+                    ActivityIndicator(isAnimating: true) { activityIndicator in
+                        activityIndicator.style = .large
+                        activityIndicator.color = .white
+                    }
+                }
             }
-            .frame(width: 300, height: 300, alignment: .center)
 
             Text(nowPlayingInfo.currentItem?.title ?? "")
                 .font(.headline)
@@ -78,6 +87,23 @@ struct AirPlayButton: UIViewRepresentable {
 
     func updateUIView(_ uiView: UIViewType, context: Context) {
 
+    }
+
+}
+
+// Why can't I set the size of a ProgressView -_-
+struct ActivityIndicator: UIViewRepresentable {
+
+    var isAnimating: Bool
+    fileprivate var configuration = { (activityIndicator: UIActivityIndicatorView) in }
+
+    func makeUIView(context: Context) -> UIActivityIndicatorView {
+        return UIActivityIndicatorView()
+    }
+
+    func updateUIView(_ uiView: UIActivityIndicatorView, context: Context) {
+        isAnimating ? uiView.startAnimating() : uiView.stopAnimating()
+        configuration(uiView)
     }
 
 }

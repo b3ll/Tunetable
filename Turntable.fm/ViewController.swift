@@ -17,8 +17,8 @@ import MediaPlayer
 class ViewController: UIViewController, SHSessionDelegate {
 
     let audioEngine = AVAudioEngine()
-    let analysisNode = AVAudioMixerNode()
-    let outputMixerNode = AVAudioMixerNode()
+    var analysisNode: AVAudioMixerNode!
+    var outputMixerNode: AVAudioMixerNode!
 
     let nowPlayingInfo = NowPlayingInfo()
 
@@ -62,15 +62,18 @@ class ViewController: UIViewController, SHSessionDelegate {
         view.addSubview(hostedVC.view)
         hostedVC.didMove(toParent: self)
 
-        configureAudioEngine()
-
         UIApplication.shared.beginReceivingRemoteControlEvents()
 
-        do {
-            try match()
-        } catch {
-            print("Failed to start playback. \(error)")
-        }
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(audioRouteChanged(notification:)),
+                                               name: AVAudioSession.routeChangeNotification,
+                                               object: nil)
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        restartMatchingAndStreaming()
     }
 
     override func viewDidLayoutSubviews() {
@@ -80,6 +83,9 @@ class ViewController: UIViewController, SHSessionDelegate {
     }
 
     func configureAudioEngine() {
+        self.analysisNode = AVAudioMixerNode()
+        self.outputMixerNode = AVAudioMixerNode()
+
         let inputFormat = audioEngine.inputNode.inputFormat(forBus: 0)
 
         let analysisOutputFormat = AVAudioFormat(standardFormatWithSampleRate: inputFormat.sampleRate, channels: 1)
@@ -89,8 +95,8 @@ class ViewController: UIViewController, SHSessionDelegate {
         audioEngine.attach(outputMixerNode)
 
         audioEngine.connect(audioEngine.inputNode, to: [
-            AVAudioConnectionPoint(node: analysisNode, bus: analysisNode.nextAvailableInputBus),
-            AVAudioConnectionPoint(node: outputMixerNode, bus: outputMixerNode.nextAvailableInputBus)
+            AVAudioConnectionPoint(node: analysisNode, bus: 0),
+            AVAudioConnectionPoint(node: outputMixerNode, bus: 0)
         ], fromBus: 0, format: inputFormat)
 
         analysisNode.installTap(onBus: 0,
@@ -112,7 +118,7 @@ class ViewController: UIViewController, SHSessionDelegate {
                 return max(0.0, min((abs(minDb) - abs(power)) / abs(minDb), 1.0))
             }()
 
-            if level < 0.6 {
+            if level < 0.4 {
                 if self?.nowPlayingInfo.currentItem != nil {
                     // silence, do nothing
                     DispatchQueue.main.async {
@@ -125,7 +131,7 @@ class ViewController: UIViewController, SHSessionDelegate {
             }
         }
 
-        audioEngine.connect(outputMixerNode, to: audioEngine.outputNode, format: outputFormat)
+        audioEngine.connect(outputMixerNode, to: audioEngine.mainMixerNode, format: outputFormat)
     }
 
     private func addAudio(buffer: AVAudioPCMBuffer, audioTime: AVAudioTime) {
@@ -141,37 +147,147 @@ class ViewController: UIViewController, SHSessionDelegate {
         session?.matchStreamingBuffer(buffer, at: audioTime)
     }
 
-    func start() throws {
+    private func restartMatchingAndStreaming() {
+        do {
+            updateCurrentItem(with: nil)
+
+            stopAudioEngine()
+            resetAudioEngine()
+
+            configureAudioEngine()
+
+            try startMatching()
+        } catch {
+            print("Failed to start playback. \(error)")
+        }
+    }
+
+    private func startMatching() throws {
+        self.session = SHSession()
+        self.session?.delegate = self
+
+        try startAudioEngine()
+    }
+
+    private func startAudioEngine() throws {
         guard !audioEngine.isRunning else { return }
         let audioSession = AVAudioSession.sharedInstance()
 
         try audioSession.setCategory(.playAndRecord, mode: .measurement, policy: .default)
         audioSession.requestRecordPermission { [weak self] success in
             guard success, let self = self else { return }
-            try? self.audioEngine.start()
+            do {
+                try self.audioEngine.start()
+            } catch {
+                print("Failed to start audio engine: \(error)")
+            }
         }
     }
 
-    func stop() {
+    private func stopAudioEngine() {
         if audioEngine.isRunning {
             audioEngine.stop()
         }
     }
 
-    func match(_ catalog: SHCustomCatalog? = nil) throws {
-        if session == nil {
-            if let catalog = catalog {
-                self.session = SHSession(catalog: catalog)
-            } else {
-                self.session = SHSession()
-            }
-            self.session?.delegate = self
+    private func resetAudioEngine() {
+        analysisNode?.removeTap(onBus: 0)
+
+        if let analysisNode = analysisNode {
+            audioEngine.disconnectNodeInput(analysisNode)
+            audioEngine.detach(analysisNode)
         }
 
-        try start()
+        if let outputMixerNode = outputMixerNode {
+            audioEngine.disconnectNodeOutput(outputMixerNode)
+            audioEngine.disconnectNodeInput(outputMixerNode)
+            audioEngine.detach(outputMixerNode)
+        }
+
+        audioEngine.disconnectNodeOutput(audioEngine.inputNode)
+        audioEngine.disconnectNodeInput(audioEngine.mainMixerNode)
+
+        audioEngine.reset()
     }
 
-    func updateNowPlaying(with mediaItem: NowPlayingItem?) {
+    // MARK: - Route Changes
+
+    @objc private func audioRouteChanged(notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let reasonValue = userInfo[AVAudioSessionRouteChangeReasonKey] as? UInt,
+              let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue) else {
+            return
+        }
+
+        switch reason {
+            case .newDeviceAvailable, .oldDeviceUnavailable:
+                DispatchQueue.main.async { [weak self] in
+                    self?.restartMatchingAndStreaming()
+                }
+
+            default:
+                break
+        }
+    }
+
+    // MARK: - SHSessionDelegate
+
+    private var bufferedMatchID: String?
+
+    func session(_ session: SHSession, didFind match: SHMatch) {
+        guard let firstMatch = match.mediaItems.first else { return }
+
+        // This should hopefully stop random shazam matches causing the now playing info to flicker, slower to match, but should look better?
+        // i.e. finding a match, and then finding a new match, and then shazam figuring out it was the original match and flipping back. Now it requires 2 matches before updating.
+        if let bufferedMatchID = bufferedMatchID, bufferedMatchID != firstMatch.shazamID {
+            self.bufferedMatchID = firstMatch.shazamID
+            return
+        } else if bufferedMatchID == nil {
+            self.bufferedMatchID = firstMatch.shazamID
+        }
+
+        DispatchQueue.main.async { [weak self] in
+            self?.updateCurrentItem(with: firstMatch)
+        }
+    }
+
+    func session(_ session: SHSession, didNotFindMatchFor signature: SHSignature, error: Error?) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+
+            // Only clear things if we've failed to match 3 times in a row.
+            if self.failureCount < 3 {
+                self.failureCount += 1
+            } else {
+                self.updateCurrentItem(with: nil)
+            }
+        }
+    }
+
+    // Helpers
+
+    private func updateCurrentItem(with matchedMediaItem: SHMatchedMediaItem?) {
+        let newItem: NowPlayingItem?
+        if let match = matchedMediaItem {
+            newItem = NowPlayingItem(title: match.title, artist: match.artist, artworkURL: match.artworkURL)
+        } else {
+            newItem = nil
+        }
+
+        if newItem == nowPlayingInfo.currentItem {
+            return
+        }
+
+        self.failureCount = 0
+        self.bufferedMatchID = nil
+
+        nowPlayingInfo.currentItem = newItem
+        self.updateNowPlaying(with: newItem)
+        self.currentMatchTimestampOffset = matchedMediaItem?.predictedCurrentMatchOffset
+        self.currentMatchTimestamp = (newItem == nil) ? nil : Date()
+    }
+
+    private func updateNowPlaying(with mediaItem: NowPlayingItem?) {
         let infoCenter = MPNowPlayingInfoCenter.default()
 
         if let mediaItem = mediaItem {
@@ -192,47 +308,6 @@ class ViewController: UIViewController, SHSessionDelegate {
             infoCenter.nowPlayingInfo = nowPlayingInfo
         } else {
             infoCenter.nowPlayingInfo = nil
-        }
-    }
-
-    // MARK: - SHSessionDelegate
-
-    func session(_ session: SHSession, didFind match: SHMatch) {
-        DispatchQueue.main.async { [weak self] in
-            self?.updateCurrentItem(with: match.mediaItems.first)
-        }
-    }
-
-    private func updateCurrentItem(with matchedMediaItem: SHMatchedMediaItem?) {
-        let newItem: NowPlayingItem?
-        if let match = matchedMediaItem {
-            newItem = NowPlayingItem(title: match.title, artist: match.artist, artworkURL: match.artworkURL)
-        } else {
-            newItem = nil
-        }
-
-        if newItem == nowPlayingInfo.currentItem {
-            return
-        }
-
-        self.failureCount = 0
-
-        nowPlayingInfo.currentItem = newItem
-        self.updateNowPlaying(with: newItem)
-        self.currentMatchTimestampOffset = matchedMediaItem?.predictedCurrentMatchOffset
-        self.currentMatchTimestamp = (newItem == nil) ? nil : Date()
-    }
-
-    func session(_ session: SHSession, didNotFindMatchFor signature: SHSignature, error: Error?) {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-
-            // Only clear things if we've failed to match 3 times in a row.
-            if self.failureCount < 3 {
-                self.failureCount += 1
-            } else {
-                self.updateCurrentItem(with: nil)
-            }
         }
     }
 
