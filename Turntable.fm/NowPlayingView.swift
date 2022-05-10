@@ -14,9 +14,26 @@ import SDWebImageSwiftUI
 import ShazamKit
 
 struct NowPlayingItem: Equatable {
+
     let title: String?
     let artist: String?
     let artworkURL: URL?
+    let artworkImage: UIImage?
+
+    init(title: String?, artist: String?, artworkURL: URL?) {
+        self.title = title
+        self.artist = artist
+        self.artworkURL = artworkURL
+        self.artworkImage = nil
+    }
+
+    init(title: String?, artist: String?, artworkImage: UIImage?) {
+        self.title = title
+        self.artist = artist
+        self.artworkURL = nil
+        self.artworkImage = artworkImage
+    }
+
 }
 
 class NowPlayingInfo: ObservableObject {
@@ -36,7 +53,7 @@ struct NowPlayingView: View {
 
             ZStack {
                 AlbumArtWrap(cornerRadius: 4.0, disableWrap: false, disableShadow: false) {
-                    AlbumArtView(url: nowPlayingInfo.currentItem?.artworkURL)
+                    AlbumArtView(url: nowPlayingInfo.currentItem?.artworkURL, image: nowPlayingInfo.currentItem?.artworkImage)
                         .frame(width: 300, height: 300, alignment: .center)
                 }
                 .frame(width: 300, height: 300, alignment: .center)
@@ -49,11 +66,14 @@ struct NowPlayingView: View {
                 }
             }
 
-            Text(nowPlayingInfo.currentItem?.title ?? "")
-                .font(.headline)
+            VStack(spacing: 4.0) {
+                Text(nowPlayingInfo.currentItem?.title ?? "")
+                    .font(.headline)
 
-            Text(nowPlayingInfo.currentItem?.artist ?? "")
-                .font(.subheadline)
+                Text(nowPlayingInfo.currentItem?.artist ?? "")
+                    .font(.subheadline)
+            }
+            .padding(.vertical, 8.0)
 
             Spacer()
 
@@ -62,17 +82,28 @@ struct NowPlayingView: View {
                 .padding(.bottom, 20.0)
         }
         .background(
-            WebImage(url: nowPlayingInfo.currentItem?.artworkURL)
-                .placeholder {
-                    EmptyView()
+            GeometryReader { geo in
+                Group {
+                    if let artworkImage = nowPlayingInfo.currentItem?.artworkImage {
+                        Image(uiImage: artworkImage)
+                            .resizable()
+                            .aspectRatio(1.0, contentMode: .fill)
+                    } else {
+                        WebImage(url: nowPlayingInfo.currentItem?.artworkURL)
+                            .placeholder {
+                                EmptyView()
+                            }
+                            .resizable()
+                            .aspectRatio(1.0, contentMode: .fill)
+                    }
                 }
-                .resizable()
-                .aspectRatio(1.0, contentMode: .fill)
-                .scaleEffect(6.9)
-                .blur(radius: 80.0)
-                .opacity(nowPlayingInfo.currentItem?.artworkURL != nil ? 1.0 : 0.0)
-                .overlay(Color.black.opacity(0.1).edgesIgnoringSafeArea(.all))
-                .edgesIgnoringSafeArea(.all)
+                .frame(width: geo.size.height, height: geo.size.height)
+                .position(x: geo.size.width / 2.0, y: geo.size.height / 2.0)
+                .blur(radius: 200.0)
+                .opacity(nowPlayingInfo.currentItem?.artworkURL != nil || nowPlayingInfo.currentItem?.artworkImage != nil ? 1.0 : 0.0)
+                .overlay(Color.white.opacity(0.1).edgesIgnoringSafeArea(.all))
+            }
+            .edgesIgnoringSafeArea(.all)
         )
         .animation(.spring(response: 0.3, dampingFraction: 1.0, blendDuration: 0.0), value: nowPlayingInfo.currentItem)
     }
@@ -110,7 +141,17 @@ struct ActivityIndicator: UIViewRepresentable {
 }
 
 struct NowPlayingView_Previews: PreviewProvider {
+
+    static var nowPlayingInfo: NowPlayingInfo = {
+        let nowPlayingInfo = NowPlayingInfo()
+        nowPlayingInfo.currentItem = NowPlayingItem(title: "Clearest Blue",
+                                                    artist: "CHVRCHES",
+                                                    artworkImage: UIImage(named: "EveryOpenEye"))
+        return nowPlayingInfo
+    }()
+
     static var previews: some View {
-        NowPlayingView().environmentObject(NowPlayingInfo())
+        NowPlayingView().environmentObject(nowPlayingInfo)
     }
+
 }

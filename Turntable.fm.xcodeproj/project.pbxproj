@@ -21,6 +21,7 @@
 
 /* Begin PBXFileReference section */
 		66011C74281F87FE0080746A /* AlbumArtView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlbumArtView.swift; sourceTree = "<group>"; };
+		66D891AE282A1F0400A8F3B8 /* DebugAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = DebugAssets.xcassets; sourceTree = "<group>"; };
 		66F4902E281CEE62008601E6 /* Turntable.fm.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Turntable.fm.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		66F49031281CEE62008601E6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		66F49033281CEE62008601E6 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -64,6 +65,7 @@
 		66F49030281CEE62008601E6 /* Turntable.fm */ = {
 			isa = PBXGroup;
 			children = (
+				66D891AE282A1F0400A8F3B8 /* DebugAssets.xcassets */,
 				66F49031281CEE62008601E6 /* AppDelegate.swift */,
 				66F49050281CF5F2008601E6 /* NowPlayingView.swift */,
 				66011C74281F87FE0080746A /* AlbumArtView.swift */,
@@ -247,6 +249,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 6TK23TLYP7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Turntable.fm/Info.plist;
@@ -390,6 +393,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 6TK23TLYP7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Turntable.fm/Info.plist;
@@ -419,6 +423,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 6TK23TLYP7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Turntable.fm/Info.plist;
