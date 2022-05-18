@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "66F4902D281CEE62008601E6"
-               BuildableName = "Turntable.fm.app"
-               BlueprintName = "Turntable.fm"
-               ReferencedContainer = "container:Turntable.fm.xcodeproj">
+               BuildableName = "Tunetable.app"
+               BlueprintName = "Tunetable"
+               ReferencedContainer = "container:Tunetable.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -31,7 +31,7 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "66F4902D281CEE62008601E6"
-            BuildableName = "Turntable.fm.app"
-            BlueprintName = "Turntable.fm"
-            ReferencedContainer = "container:Turntable.fm.xcodeproj">
+            BuildableName = "Tunetable.app"
+            BlueprintName = "Tunetable"
+            ReferencedContainer = "container:Tunetable.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "66F4902D281CEE62008601E6"
-            BuildableName = "Turntable.fm.app"
-            BlueprintName = "Turntable.fm"
-            ReferencedContainer = "container:Turntable.fm.xcodeproj">
+            BuildableName = "Tunetable.app"
+            BlueprintName = "Tunetable"
+            ReferencedContainer = "container:Tunetable.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -1,12 +1,12 @@
-# Turntable.fm
+# Tunetable
 
 A simple app that lets you stream your vinyl records over AirPlay using an iPhone or iPad.
 
 It also has the neat feature of automatically matching the song played with Shazam and updating Now Playing accordingly.
 
-### Why'd you call it Turntable.fm?
+### Why'd you call it Tunetable?
 
-It was mostly a personal joke since I originally had my records streaming throughout my house using Icecast + DarkIce, which is effectively spinning up my own radio station, but that didn't work as well as I'd like (delay issues) so I made this app instead and called it Turntable.fm.
+It was mostly a personal joke since I originally had my records streaming throughout my house using Icecast + DarkIce, which is effectively spinning up my own radio station that I would _tune into_ but that didn't work as well as I'd like (delay issues) so I made this app instead and called it Tunetable.
 
 The name probably won't stick, so I'm open to other ideas, RecordPlay / VinylPlay / AirLP, etc. sounded not so great 🙃
 
@@ -39,7 +39,7 @@ It'll be published on the App Store at some point, but for now, you'll have to b
 
 # License
 
-Turntable.fm is licensed under the [BSD 2-clause license](https://github.com/b3ll/Turntable.fm/blob/main/LICENSE).
+Tunetable is licensed under the [BSD 2-clause license](https://github.com/b3ll/Tunetable/blob/main/LICENSE).
 
 Please don't just re-package this up and sell it, it's meant to be free.
 

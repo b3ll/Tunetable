@@ -1,6 +1,6 @@
 //
 //  ViewController.swift
-//  Turntable.fm
+//  Tunetable
 //
 //  Created by Adam Bell on 4/29/22.
 //
@@ -216,6 +216,7 @@ class ViewController: UIViewController, SHSessionDelegate {
         let audioSession = AVAudioSession.sharedInstance()
 
         try audioSession.setCategory(.playAndRecord, mode: .measurement, policy: .default, options: .allowAirPlay)
+        try audioSession.setPreferredSampleRate(48_000)
         audioSession.requestRecordPermission { [weak self] success in
             guard success, let self = self else { return }
             do {
@@ -262,11 +263,17 @@ class ViewController: UIViewController, SHSessionDelegate {
         }
 
         switch reason {
-            case .newDeviceAvailable, .oldDeviceUnavailable:
+            case .newDeviceAvailable, .oldDeviceUnavailable, .wakeFromSleep:
                 DispatchQueue.main.async { [weak self] in
                     self?.restartMatchingAndStreaming()
                 }
 
+            case .categoryChange:
+                if AVAudioSession.sharedInstance().category == .playAndRecord {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.restartMatchingAndStreaming()
+                    }
+                }
             default:
                 break
         }

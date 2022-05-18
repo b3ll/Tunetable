@@ -22,7 +22,7 @@
 /* Begin PBXFileReference section */
 		66011C74281F87FE0080746A /* AlbumArtView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AlbumArtView.swift; sourceTree = "<group>"; };
 		66D891AE282A1F0400A8F3B8 /* DebugAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = DebugAssets.xcassets; sourceTree = "<group>"; };
-		66F4902E281CEE62008601E6 /* Turntable.fm.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Turntable.fm.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		66F4902E281CEE62008601E6 /* Tunetable.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Tunetable.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		66F49031281CEE62008601E6 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		66F49033281CEE62008601E6 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		66F49035281CEE62008601E6 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -49,7 +49,7 @@
 		66F49025281CEE62008601E6 = {
 			isa = PBXGroup;
 			children = (
-				66F49030281CEE62008601E6 /* Turntable.fm */,
+				66F49030281CEE62008601E6 /* Tunetable */,
 				66F4902F281CEE62008601E6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -57,12 +57,12 @@
 		66F4902F281CEE62008601E6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				66F4902E281CEE62008601E6 /* Turntable.fm.app */,
+				66F4902E281CEE62008601E6 /* Tunetable.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		66F49030281CEE62008601E6 /* Turntable.fm */ = {
+		66F49030281CEE62008601E6 /* Tunetable */ = {
 			isa = PBXGroup;
 			children = (
 				66D891AE282A1F0400A8F3B8 /* DebugAssets.xcassets */,
@@ -76,15 +76,15 @@
 				66F4903C281CEE63008601E6 /* LaunchScreen.storyboard */,
 				66F4903F281CEE63008601E6 /* Info.plist */,
 			);
-			path = Turntable.fm;
+			path = Tunetable;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		66F4902D281CEE62008601E6 /* Turntable.fm */ = {
+		66F4902D281CEE62008601E6 /* Tunetable */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 66F49042281CEE63008601E6 /* Build configuration list for PBXNativeTarget "Turntable.fm" */;
+			buildConfigurationList = 66F49042281CEE63008601E6 /* Build configuration list for PBXNativeTarget "Tunetable" */;
 			buildPhases = (
 				66F4902A281CEE62008601E6 /* Sources */,
 				66F4902B281CEE62008601E6 /* Frameworks */,
@@ -94,13 +94,13 @@
 			);
 			dependencies = (
 			);
-			name = Turntable.fm;
+			name = Tunetable;
 			packageProductDependencies = (
 				66F4904E281CF5C4008601E6 /* SDWebImage */,
 				66F49053281CF607008601E6 /* SDWebImageSwiftUI */,
 			);
 			productName = Turntable.fm;
-			productReference = 66F4902E281CEE62008601E6 /* Turntable.fm.app */;
+			productReference = 66F4902E281CEE62008601E6 /* Tunetable.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -118,7 +118,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 66F49029281CEE62008601E6 /* Build configuration list for PBXProject "Turntable.fm" */;
+			buildConfigurationList = 66F49029281CEE62008601E6 /* Build configuration list for PBXProject "Tunetable" */;
 			compatibilityVersion = "Xcode 13.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -135,7 +135,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				66F4902D281CEE62008601E6 /* Turntable.fm */,
+				66F4902D281CEE62008601E6 /* Tunetable */,
 			);
 		};
 /* End PBXProject section */
@@ -264,7 +264,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = ca.adambell.TurntableFM;
+				PRODUCT_BUNDLE_IDENTIFIER = ca.adambell.tunetable;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -408,7 +408,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = ca.adambell.TurntableFM;
+				PRODUCT_BUNDLE_IDENTIFIER = ca.adambell.tunetable;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -438,7 +438,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = ca.adambell.TurntableFM;
+				PRODUCT_BUNDLE_IDENTIFIER = ca.adambell.tunetable;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -449,7 +449,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		66F49029281CEE62008601E6 /* Build configuration list for PBXProject "Turntable.fm" */ = {
+		66F49029281CEE62008601E6 /* Build configuration list for PBXProject "Tunetable" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				66F49040281CEE63008601E6 /* Debug */,
@@ -459,7 +459,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		66F49042281CEE63008601E6 /* Build configuration list for PBXNativeTarget "Turntable.fm" */ = {
+		66F49042281CEE63008601E6 /* Build configuration list for PBXNativeTarget "Tunetable" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				66F49043281CEE63008601E6 /* Debug */,
