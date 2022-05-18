@@ -267,13 +267,6 @@ class ViewController: UIViewController, SHSessionDelegate {
                 DispatchQueue.main.async { [weak self] in
                     self?.restartMatchingAndStreaming()
                 }
-
-            case .categoryChange:
-                if AVAudioSession.sharedInstance().category == .playAndRecord {
-                    DispatchQueue.main.async { [weak self] in
-                        self?.restartMatchingAndStreaming()
-                    }
-                }
             default:
                 break
         }
