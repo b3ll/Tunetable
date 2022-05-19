@@ -256,6 +256,7 @@
 				DEVELOPMENT_TEAM = 6TK23TLYP7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Tunetable/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To stream audio.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -404,6 +405,7 @@
 				DEVELOPMENT_TEAM = 6TK23TLYP7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Tunetable/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To stream audio.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
@@ -438,6 +440,7 @@
 				DEVELOPMENT_TEAM = 6TK23TLYP7;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Tunetable/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.music";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "To stream audio.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
