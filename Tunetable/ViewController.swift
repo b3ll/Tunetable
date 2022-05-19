@@ -158,7 +158,9 @@ class ViewController: UIViewController, SHSessionDelegate {
 
                 if self?.nowPlayingInfo.silenceDetected == false {
                     DispatchQueue.main.async {
-                        self?.nowPlayingInfo.silenceDetected = true
+                        withAnimation(.spring(response: 0.4, dampingFraction: 1.0, blendDuration: 0.0)) {
+                            self?.nowPlayingInfo.silenceDetected = true
+                        }
                     }
                 }
             } else {
@@ -167,7 +169,9 @@ class ViewController: UIViewController, SHSessionDelegate {
 
                 if self?.nowPlayingInfo.silenceDetected == true {
                     DispatchQueue.main.async {
-                        self?.nowPlayingInfo.silenceDetected = false
+                        withAnimation(.spring(response: 0.4, dampingFraction: 1.0, blendDuration: 0.0)) {
+                            self?.nowPlayingInfo.silenceDetected = false
+                        }
                     }
                 }
             }

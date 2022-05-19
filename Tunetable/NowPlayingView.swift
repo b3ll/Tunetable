@@ -57,6 +57,8 @@ struct NowPlayingView: View {
                         .frame(width: 300, height: 300, alignment: .center)
                 }
                 .frame(width: 300, height: 300, alignment: .center)
+                .scaleEffect(nowPlayingInfo.currentItem == nil || nowPlayingInfo.silenceDetected ? 0.8 : 1.0)
+                .overlay(Color.black.opacity(nowPlayingInfo.currentItem == nil || nowPlayingInfo.silenceDetected ? 0.2 : 0.0))
 
                 if nowPlayingInfo.currentItem == nil && !nowPlayingInfo.silenceDetected {
                     ActivityIndicator(isAnimating: true) { activityIndicator in
