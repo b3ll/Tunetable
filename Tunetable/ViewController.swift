@@ -74,6 +74,10 @@ class ViewController: UIViewController, SHSessionDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
+        resetEverything()
+    }
+
+    private func resetEverything() {
         fixupAVAudioSessionWithAirPlay { [weak self] in
             self?.restartMatchingAndStreaming()
         }
@@ -95,13 +99,27 @@ class ViewController: UIViewController, SHSessionDelegate {
 
          ¯\_(ツ)_/¯
          */
+        updateCurrentItem(with: nil)
+
+        stopAudioEngine()
+        resetAudioEngine()
+
         let audioSession = AVAudioSession.sharedInstance()
 
-        try? audioSession.setCategory(.playback, mode: .default, policy: .default, options: .allowAirPlay)
+        do {
+            try audioSession.setCategory(.playback)
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-            try? audioSession.setCategory(.playAndRecord, mode: .measurement, policy: .default, options: .allowAirPlay)
-            completion()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                do {
+                    try audioSession.setCategory(.playAndRecord, mode: .measurement, policy: .default, options: .allowAirPlay)
+                } catch {
+                    print("Failed to set category. \(error)")
+                }
+                completion()
+
+            }
+        } catch {
+            print("Failed to reset category. \(error)")
         }
     }
 
@@ -220,13 +238,13 @@ class ViewController: UIViewController, SHSessionDelegate {
         let audioSession = AVAudioSession.sharedInstance()
 
         try audioSession.setCategory(.playAndRecord, mode: .measurement, policy: .default, options: .allowAirPlay)
-        try audioSession.setPreferredSampleRate(48_000)
         audioSession.requestRecordPermission { [weak self] success in
             guard success, let self = self else { return }
             do {
                 try self.audioEngine.start()
             } catch {
                 print("Failed to start audio engine: \(error)")
+                self.resetEverything()
             }
         }
     }
@@ -267,9 +285,9 @@ class ViewController: UIViewController, SHSessionDelegate {
         }
 
         switch reason {
-            case .newDeviceAvailable, .oldDeviceUnavailable, .wakeFromSleep:
+            case .newDeviceAvailable, .wakeFromSleep:
                 DispatchQueue.main.async { [weak self] in
-                    self?.restartMatchingAndStreaming()
+                    self?.resetEverything()
                 }
             default:
                 break
