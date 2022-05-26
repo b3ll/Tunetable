@@ -8,17 +8,13 @@
 import Accelerate
 import AVFAudio
 import AVFoundation
-import ShazamKit
-import UIKit
-import SwiftUI
-import SDWebImage
 import MediaPlayer
+import SDWebImage
+import ShazamKit
+import SwiftUI
+import UIKit
 
 class ViewController: UIViewController, SHSessionDelegate {
-
-    let audioEngine = AVAudioEngine()
-    var analysisNode: AVAudioMixerNode!
-    var outputMixerNode: AVAudioMixerNode!
 
     let nowPlayingInfo = NowPlayingInfo()
 
@@ -68,18 +64,21 @@ class ViewController: UIViewController, SHSessionDelegate {
                                                selector: #selector(audioRouteChanged(notification:)),
                                                name: AVAudioSession.routeChangeNotification,
                                                object: nil)
-
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        resetEverything()
+        restartEverything()
     }
 
-    private func resetEverything() {
-        fixupAVAudioSessionWithAirPlay { [weak self] in
-            self?.restartMatchingAndStreaming()
+    private func restartEverything() {
+        AVAudioSession.sharedInstance().requestRecordPermission { [weak self] success in
+            guard success else { return }
+
+            self?.fixupAVAudioSessionWithAirPlay {
+                self?.restartMatchingAndStreaming()
+            }
         }
     }
 
@@ -99,180 +98,111 @@ class ViewController: UIViewController, SHSessionDelegate {
 
          ¯\_(ツ)_/¯
          */
-        updateCurrentItem(with: nil)
-
-        stopAudioEngine()
-        resetAudioEngine()
-
         let audioSession = AVAudioSession.sharedInstance()
+
+        let failedToFixAirPlay = { [weak self] (error: Error) in
+            self?.showAudioEngineFailure("Failed to fix AirPlay: \(error)")
+        }
 
         do {
             try audioSession.setCategory(.playback)
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                 do {
-                    try audioSession.setCategory(.playAndRecord, mode: .measurement, policy: .default, options: .allowAirPlay)
+                    try AVAudioSession.sharedInstance().setCategory(.playAndRecord, mode: .measurement, policy: .default, options: .allowAirPlay)
+                    completion()
                 } catch {
-                    print("Failed to set category. \(error)")
+                    failedToFixAirPlay(error)
                 }
-                completion()
-
             }
         } catch {
-            print("Failed to reset category. \(error)")
+            failedToFixAirPlay(error)
         }
-    }
-
-    func configureAudioEngine() {
-        self.analysisNode = AVAudioMixerNode()
-        self.outputMixerNode = AVAudioMixerNode()
-
-        let inputFormat = audioEngine.inputNode.inputFormat(forBus: 0)
-
-        if inputFormat.channelCount < 1 {
-            showInvalidInputAlert()
-            return
-        } else if presentedViewController is UIAlertController {
-            dismiss(animated: true)
-        }
-
-        let analysisOutputFormat = AVAudioFormat(standardFormatWithSampleRate: inputFormat.sampleRate, channels: 1)
-        let outputFormat = AVAudioFormat(standardFormatWithSampleRate: inputFormat.sampleRate, channels: 2)
-
-        audioEngine.attach(analysisNode)
-        audioEngine.attach(outputMixerNode)
-
-        audioEngine.connect(audioEngine.inputNode, to: [
-            AVAudioConnectionPoint(node: analysisNode, bus: 0),
-            AVAudioConnectionPoint(node: outputMixerNode, bus: 0)
-        ], fromBus: 0, format: inputFormat)
-
-        analysisNode.installTap(onBus: 0,
-                                bufferSize: 8192,
-                                format: analysisOutputFormat) { [weak self] buffer, audioTime in
-            guard let floatData = buffer.floatChannelData else { return }
-
-            let channelCount = Int(buffer.format.channelCount)
-            guard channelCount >= 1 else { return }
-
-            // Accelerate is so neat
-            let floatDataPointer = UnsafeBufferPointer(start: floatData[0], count: Int(buffer.frameLength))
-            let rms = vDSP.rootMeanSquare(floatDataPointer)
-
-            let power = 20 * log10(rms)
-            let level = { () -> Float in
-                guard power.isFinite else { return 0.0 }
-                let minDb: Float = -80.0
-                return max(0.0, min((abs(minDb) - abs(power)) / abs(minDb), 1.0))
-            }()
-
-            if level < 0.6 {
-                if self?.nowPlayingInfo.currentItem != nil {
-                    // silence, do nothing
-                    DispatchQueue.main.async {
-                        self?.updateCurrentItem(with: nil)
-                    }
-                }
-
-                if self?.nowPlayingInfo.silenceDetected == false {
-                    DispatchQueue.main.async {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 1.0, blendDuration: 0.0)) {
-                            self?.nowPlayingInfo.silenceDetected = true
-                        }
-                    }
-                }
-            } else {
-                // now we have samples, what's playing?
-                self?.addAudio(buffer: buffer, audioTime: audioTime)
-
-                if self?.nowPlayingInfo.silenceDetected == true {
-                    DispatchQueue.main.async {
-                        withAnimation(.spring(response: 0.4, dampingFraction: 1.0, blendDuration: 0.0)) {
-                            self?.nowPlayingInfo.silenceDetected = false
-                        }
-                    }
-                }
-            }
-        }
-
-        audioEngine.connect(outputMixerNode, to: audioEngine.mainMixerNode, format: outputFormat)
-    }
-
-    private func addAudio(buffer: AVAudioPCMBuffer, audioTime: AVAudioTime) {
-        // This needs some work.
-        /* if let _ = currentMatchTimestamp,
-           let _ = currentMatchTimestampOffset,
-           let futureTimeStamp = futureTimestamp,
-           let _ = currentMatch {
-            if Date() < futureTimeStamp {
-                return
-            }
-        } */
-        session?.matchStreamingBuffer(buffer, at: audioTime)
     }
 
     private func restartMatchingAndStreaming() {
         do {
             updateCurrentItem(with: nil)
 
-            stopAudioEngine()
-            resetAudioEngine()
+            try initMatchingSession()
 
-            configureAudioEngine()
+            AudioEngine.shared.stop()
+            AudioEngine.shared.reset()
+            AudioEngine.shared.setup()
+            
+            try AudioEngine.shared.start()
 
-            try startMatching()
+            AudioEngine.shared.stateChanged { [weak self] state in
+                switch state {
+                    case .stopped:
+                        self?.updateSilenceDetectedState(false)
+                        self?.updateCurrentItemIfNeeded(nil)
+                    case .invalidInput:
+                        DispatchQueue.main.async {
+                            self?.showInvalidInputAlert()
+                        }
+                    case .silenceDetected:
+                        // silence, do nothing
+                        self?.updateSilenceDetectedState(true)
+                        self?.updateCurrentItemIfNeeded(nil)
+                    case .matching(let buffer, let audioTime):
+                        self?.updateSilenceDetectedState(false)
+                        self?.session?.matchStreamingBuffer(buffer, at: audioTime)
+                }
+            }
         } catch {
-            print("Failed to start playback. \(error)")
+            showAudioEngineFailure("Failed to start matching: \(error)")
         }
     }
 
-    private func startMatching() throws {
-        self.session = SHSession()
-        self.session?.delegate = self
+    private func updateSilenceDetectedState(_ silenceDetected: Bool) {
+        if nowPlayingInfo.silenceDetected == silenceDetected {
+            return
+        }
 
-        try startAudioEngine()
-    }
-
-    private func startAudioEngine() throws {
-        guard !audioEngine.isRunning else { return }
-        let audioSession = AVAudioSession.sharedInstance()
-
-        try audioSession.setCategory(.playAndRecord, mode: .measurement, policy: .default, options: .allowAirPlay)
-        audioSession.requestRecordPermission { [weak self] success in
-            guard success, let self = self else { return }
-            do {
-                try self.audioEngine.start()
-            } catch {
-                print("Failed to start audio engine: \(error)")
-                self.resetEverything()
+        DispatchQueue.main.async {
+            withAnimation(NowPlayingView.defaultSpringAnimation) {
+                self.nowPlayingInfo.silenceDetected = silenceDetected
             }
         }
     }
 
-    private func stopAudioEngine() {
-        if audioEngine.isRunning {
-            audioEngine.stop()
+    private func updateCurrentItemIfNeeded(_ item: NowPlayingItem?) {
+        if nowPlayingInfo.currentItem == item {
+            return
+        }
+
+        DispatchQueue.main.async {
+            withAnimation(NowPlayingView.defaultSpringAnimation) {
+                self.updateCurrentItem(with: nil)
+            }
         }
     }
 
-    private func resetAudioEngine() {
-        analysisNode?.removeTap(onBus: 0)
+    private func initMatchingSession() throws {
+        self.session = SHSession()
+        self.session?.delegate = self
+    }
 
-        if let analysisNode = analysisNode, analysisNode.engine != nil {
-            audioEngine.disconnectNodeInput(analysisNode)
-            audioEngine.detach(analysisNode)
+    // MARK: - Remote Control Events
+
+    override func remoteControlReceived(with event: UIEvent?) {
+        guard let event = event else {
+            return
         }
 
-        if let outputMixerNode = outputMixerNode, outputMixerNode.engine != nil {
-            audioEngine.disconnectNodeOutput(outputMixerNode)
-            audioEngine.disconnectNodeInput(outputMixerNode)
-            audioEngine.detach(outputMixerNode)
+        switch event.subtype {
+            case .remoteControlPause, .remoteControlStop:
+                AudioEngine.shared.stop()
+            case .remoteControlPlay:
+                do {
+                    try AudioEngine.shared.start()
+                } catch {
+                    showAudioEngineFailure("Remote control failed: \(error)")
+                }
+            default:
+                break
         }
-
-        audioEngine.disconnectNodeOutput(audioEngine.inputNode)
-        audioEngine.disconnectNodeInput(audioEngine.mainMixerNode)
-
-        audioEngine.reset()
     }
 
     // MARK: - Route Changes
@@ -287,7 +217,7 @@ class ViewController: UIViewController, SHSessionDelegate {
         switch reason {
             case .newDeviceAvailable, .wakeFromSleep:
                 DispatchQueue.main.async { [weak self] in
-                    self?.resetEverything()
+                    self?.restartEverything()
                 }
             default:
                 break
@@ -295,10 +225,25 @@ class ViewController: UIViewController, SHSessionDelegate {
     }
 
     private func showInvalidInputAlert() {
-        let alert = UIAlertController(title: "Invalid Input", message: "The input from the turntable is invalid (there appears to be no input). Please try detaching and reattaching your audio interface, or disconnecting from any AirPlay destinations and try again.", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { [weak self] _ in
-            self?.restartMatchingAndStreaming()
-        }))
+        showErrorAlert(title: "Invalid Input", message: "The input from the turntable is invalid (there appears to be no input). Please try detaching and reattaching your audio interface, or disconnecting from any AirPlay destinations and try again.", showRestartButton: true)
+    }
+
+    private func showAudioEngineFailure(_ message: String) {
+        showErrorAlert(title: "Audio Engine Failure", message: message, showRestartButton: true)
+    }
+
+    private func showErrorAlert(title: String, message: String, showRestartButton: Bool) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        if showRestartButton {
+            alert.addAction(UIAlertAction(title: "Try Again", style: .default, handler: { [weak self] _ in
+                self?.restartMatchingAndStreaming()
+                self?.dismiss(animated: true)
+            }))
+        } else {
+            alert.addAction(UIAlertAction(title: "Okay", style: .default, handler: { [weak self] _ in
+                self?.dismiss(animated: true)
+            }))
+        }
         present(alert, animated: true)
     }
 
@@ -353,7 +298,10 @@ class ViewController: UIViewController, SHSessionDelegate {
         self.failureCount = 0
         self.bufferedMatchID = nil
 
-        nowPlayingInfo.currentItem = newItem
+        withAnimation(NowPlayingView.defaultSpringAnimation) {
+            nowPlayingInfo.currentItem = newItem
+        }
+
         self.updateNowPlaying(with: newItem)
         self.currentMatchTimestampOffset = matchedMediaItem?.predictedCurrentMatchOffset
         self.currentMatchTimestamp = (newItem == nil) ? nil : Date()

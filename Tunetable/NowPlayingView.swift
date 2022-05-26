@@ -47,6 +47,8 @@ struct NowPlayingView: View {
 
     @EnvironmentObject var nowPlayingInfo: NowPlayingInfo
 
+    static let defaultSpringAnimation = Animation.spring(response: 0.4, dampingFraction: 0.8, blendDuration: 0.0)
+
     var body: some View {
         VStack {
             Spacer()
@@ -55,10 +57,10 @@ struct NowPlayingView: View {
                 AlbumArtWrap(cornerRadius: 4.0, disableWrap: false, disableShadow: false) {
                     AlbumArtView(url: nowPlayingInfo.currentItem?.artworkURL, image: nowPlayingInfo.currentItem?.artworkImage)
                         .frame(width: 300, height: 300, alignment: .center)
+                        .overlay(Color.black.opacity(nowPlayingInfo.currentItem == nil || nowPlayingInfo.silenceDetected ? 0.2 : 0.0))
                 }
                 .frame(width: 300, height: 300, alignment: .center)
                 .scaleEffect(nowPlayingInfo.currentItem == nil || nowPlayingInfo.silenceDetected ? 0.8 : 1.0)
-                .overlay(Color.black.opacity(nowPlayingInfo.currentItem == nil || nowPlayingInfo.silenceDetected ? 0.2 : 0.0))
 
                 if nowPlayingInfo.currentItem == nil && !nowPlayingInfo.silenceDetected {
                     ActivityIndicator(isAnimating: true) { activityIndicator in
@@ -69,11 +71,17 @@ struct NowPlayingView: View {
             }
 
             VStack(spacing: 4.0) {
-                Text(nowPlayingInfo.currentItem?.title ?? "")
+                let title = nowPlayingInfo.currentItem?.title ?? ""
+                Text(title)
                     .font(.headline)
+                    .transition(.opacity)
+                    .id("title" + title)
 
-                Text(nowPlayingInfo.currentItem?.artist ?? "")
+                let subtitle = nowPlayingInfo.currentItem?.artist ?? ""
+                Text(subtitle)
                     .font(.subheadline)
+                    .transition(.opacity)
+                    .id("subtitle" + subtitle)
             }
             .padding(.vertical, 8.0)
 
@@ -107,7 +115,8 @@ struct NowPlayingView: View {
             }
             .edgesIgnoringSafeArea(.all)
         )
-        .animation(.spring(response: 0.3, dampingFraction: 1.0, blendDuration: 0.0), value: nowPlayingInfo.currentItem)
+        .animation(NowPlayingView.defaultSpringAnimation, value: nowPlayingInfo.currentItem)
+        .animation(NowPlayingView.defaultSpringAnimation, value: nowPlayingInfo.silenceDetected)
     }
 }
 
@@ -144,16 +153,27 @@ struct ActivityIndicator: UIViewRepresentable {
 
 struct NowPlayingView_Previews: PreviewProvider {
 
+    static let testNowPlayingItem = NowPlayingItem(title: "Clearest Blue",
+                                        artist: "CHVRCHES",
+                                        artworkImage: UIImage(named: "EveryOpenEye"))
+
     static var nowPlayingInfo: NowPlayingInfo = {
         let nowPlayingInfo = NowPlayingInfo()
-        nowPlayingInfo.currentItem = NowPlayingItem(title: "Clearest Blue",
-                                                    artist: "CHVRCHES",
-                                                    artworkImage: UIImage(named: "EveryOpenEye"))
+        nowPlayingInfo.currentItem = testNowPlayingItem
         return nowPlayingInfo
     }()
 
     static var previews: some View {
         NowPlayingView().environmentObject(nowPlayingInfo)
+            .onTapGesture {
+                if nowPlayingInfo.currentItem == nil {
+                    nowPlayingInfo.currentItem = testNowPlayingItem
+                    nowPlayingInfo.silenceDetected = false
+                } else {
+                    nowPlayingInfo.currentItem = nil
+                    nowPlayingInfo.silenceDetected = true
+                }
+            }
     }
 
 }
