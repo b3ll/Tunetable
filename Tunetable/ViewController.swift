@@ -195,11 +195,7 @@ class ViewController: UIViewController, SHSessionDelegate {
             case .remoteControlPause, .remoteControlStop:
                 AudioEngine.shared.stop()
             case .remoteControlPlay:
-                do {
-                    try AudioEngine.shared.start()
-                } catch {
-                    showAudioEngineFailure("Remote control failed: \(error)")
-                }
+                restartEverything()
             default:
                 break
         }
