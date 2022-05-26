@@ -43,6 +43,8 @@ class NowPlayingInfo: ObservableObject {
 
 }
 
+let NeedsAudioEngineRestartNotification = Notification.Name(rawValue: "NeedsAudioEngineRestartNotification")
+
 struct NowPlayingView: View {
 
     @EnvironmentObject var nowPlayingInfo: NowPlayingInfo
@@ -61,6 +63,11 @@ struct NowPlayingView: View {
                 }
                 .frame(width: 300, height: 300, alignment: .center)
                 .scaleEffect(nowPlayingInfo.currentItem == nil || nowPlayingInfo.silenceDetected ? 0.8 : 1.0)
+                .onTapGesture {
+                    if nowPlayingInfo.silenceDetected {
+                        NotificationCenter.default.post(name: NeedsAudioEngineRestartNotification, object: nil)
+                    }
+                }
 
                 if nowPlayingInfo.currentItem == nil && !nowPlayingInfo.silenceDetected {
                     ActivityIndicator(isAnimating: true) { activityIndicator in

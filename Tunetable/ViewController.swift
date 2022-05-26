@@ -64,6 +64,11 @@ class ViewController: UIViewController, SHSessionDelegate {
                                                selector: #selector(audioRouteChanged(notification:)),
                                                name: AVAudioSession.routeChangeNotification,
                                                object: nil)
+
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(restartEverything),
+                                               name: NeedsAudioEngineRestartNotification,
+                                               object: nil)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -72,7 +77,7 @@ class ViewController: UIViewController, SHSessionDelegate {
         restartEverything()
     }
 
-    private func restartEverything() {
+    @objc private func restartEverything() {
         AVAudioSession.sharedInstance().requestRecordPermission { [weak self] success in
             guard success else { return }
 
